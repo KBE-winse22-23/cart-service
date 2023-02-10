@@ -2,9 +2,9 @@ package com.onlineshop.cart.core.domain.service.impl;
 
 import com.onlineshop.cart.core.domain.model.Product;
 import com.onlineshop.cart.core.domain.service.interfaces.ProductRepository;
+import com.onlineshop.cart.port.user.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.webjars.NotFoundException;
 
 import java.util.Optional;
 
@@ -20,7 +20,7 @@ public class ProductService {
         return findProduct.orElseGet(() -> productRepository.save(product));
     }
 
-    public Product getProduct(Long productId){
+    public Product getProduct(Long productId) throws NotFoundException {
         Optional<Product> product =  productRepository.findById(productId);
 
         if(product.isPresent()){

@@ -8,6 +8,8 @@ import com.onlineshop.cart.core.domain.model.CartProductMap;
 import com.onlineshop.cart.core.domain.model.Owner;
 import com.onlineshop.cart.core.domain.model.Product;
 import com.onlineshop.cart.core.domain.service.impl.CartService;
+import com.onlineshop.cart.port.user.exception.EmptyFieldException;
+import com.onlineshop.cart.port.user.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,15 +31,13 @@ public class CartController {
     }
 
     @PostMapping("/create-cart")
-    public Cart createCart(@RequestBody Owner owner){
-        if(owner==null){
-            throw new NullPointerException("Owner is empty. Can't create a shopping cart");
-        }
+    public Cart createCart(@RequestBody Owner owner) throws EmptyFieldException {
+
         return cartService.createCart(owner);
     }
 
     @PostMapping("/add-to-cart/{cartId}")
-    public Product addProductToCart(@RequestBody Product product, @PathVariable Long cartId){
+    public Product addProductToCart(@RequestBody Product product, @PathVariable Long cartId) throws NotFoundException {
             return cartService.addProductToCart(product, cartId);
 
     }
@@ -49,17 +49,17 @@ public class CartController {
     }
 
     @GetMapping("/{cartId}")
-    public List<ProductDto> getProductsFromCart(@PathVariable("cartId") Long cartId) {
+    public List<ProductDto> getProductsFromCart(@PathVariable("cartId") Long cartId) throws NotFoundException {
         return cartService.getProductsFromCart(cartId);
     }
 
     @GetMapping("/count-products/{cartId}")
-    public int countProductsInCart(@PathVariable("cartId") Long cartId){
+    public int countProductsInCart(@PathVariable("cartId") Long cartId) throws NotFoundException {
         return cartService.countProductsInCart(cartId);
     }
 
     @DeleteMapping("/remove-product")
-    public boolean removeProductFromCart(@RequestBody CartProductMapDto cartProductMapDto){
+    public boolean removeProductFromCart(@RequestBody CartProductMapDto cartProductMapDto) throws NotFoundException {
         return cartService.removeProductFromCart(cartProductMapDto);
     }
 

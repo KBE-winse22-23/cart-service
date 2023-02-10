@@ -7,9 +7,10 @@ import com.onlineshop.cart.core.domain.dto.SendMessageToCartDto;
 import com.onlineshop.cart.core.domain.model.*;
 import com.onlineshop.cart.core.domain.service.interfaces.CartProductMapRepository;
 import com.onlineshop.cart.core.domain.service.interfaces.CartRepository;
+import com.onlineshop.cart.port.user.exception.EmptyFieldException;
+import com.onlineshop.cart.port.user.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.webjars.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,18 @@ public class CartService {
         return cartRepository.findAll();
     }
 
-    public Cart createCart(Owner owner) {
+    public Cart createCart(Owner owner) throws EmptyFieldException {
+        if(owner==null){
+            throw new EmptyFieldException("Owner is empty. Can't create a shopping cart");
+        }
+        if(owner.getOwnerId()==null || owner.getOwnerId()<=0){
+            throw new EmptyFieldException("Owner id is empty. Can't create a shopping cart");
+        }else if(owner.getFirstName().equals("")){
+            throw new EmptyFieldException("Owner first name is empty. Can't create a shopping cart");
+        }else if(owner.getLastName().equals("")){
+            throw new EmptyFieldException("Owner last name is empty. Can't create a shopping cart");
+        }
+
         Cart cart = new Cart();
         cart.setOwner(owner);
         cartRepository.save(cart);
@@ -42,7 +54,7 @@ public class CartService {
 
 
 
-    public Product addProductToCart(Product product, Long cartId) {
+    public Product addProductToCart(Product product, Long cartId) throws NotFoundException {
         Cart cart = findCart(cartId);
         Product productDB = productService.saveProduct(product);
         mapCartProduct(cart, productDB);
@@ -70,18 +82,18 @@ public class CartService {
         }
     }
 
-    public Cart findCart(Long cartId){
+    public Cart findCart(Long cartId) throws com.onlineshop.cart.port.user.exception.NotFoundException {
        Optional<Cart> cart =  cartRepository.findById(cartId);
 
        if(cart.isPresent()){
            return cart.get();
        }else{
-           throw new NotFoundException("Cart does not exist!");
+           throw new com.onlineshop.cart.port.user.exception.NotFoundException("Cart with given id " + cartId + " not found!");
        }
     }
 
 
-    public String addProductToCart(SendMessageToCartDto productAndUserInfo){
+    public String addProductToCart(SendMessageToCartDto productAndUserInfo) throws NotFoundException {
 
         Owner owner =
                 new Owner(productAndUserInfo.getOwnerId(),
@@ -111,7 +123,7 @@ public class CartService {
          return cartRepository.findByOwner(owner);
     }
 
-    public List<ProductDto> getProductsFromCart(Long cartId) {
+    public List<ProductDto> getProductsFromCart(Long cartId) throws com.onlineshop.cart.port.user.exception.NotFoundException {
         Optional<Cart> cart = cartRepository.findById(cartId);
         List<ProductDto> products = new ArrayList<>();
 
@@ -125,17 +137,17 @@ public class CartService {
 
             )).collect(Collectors.toList());
         }else{
-            throw new NotFoundException("Shopping cart not found!");
+            throw new com.onlineshop.cart.port.user.exception.NotFoundException("Shopping cart not found!");
         }
 
         return products;
     }
 
-    public int countProductsInCart(Long cartId) {
+    public int countProductsInCart(Long cartId) throws com.onlineshop.cart.port.user.exception.NotFoundException {
         return getProductsFromCart(cartId).size();
     }
 
-    public boolean removeProductFromCart(CartProductMapDto cartProductMapDto) {
+    public boolean removeProductFromCart(CartProductMapDto cartProductMapDto) throws NotFoundException {
         Optional<Cart> cart = cartRepository.findById(cartProductMapDto.getCartId());
         if(cart.isEmpty()){
             throw new NotFoundException("Shopping cart not found!");
@@ -143,7 +155,7 @@ public class CartService {
         Product product = productService.getProduct(cartProductMapDto.getProductId());
 
         CartProductMap cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
-        System.out.println("---------------------------------------------------------------------");
+
 
         cartProductMapRepository.delete(cartProductMap);
 
