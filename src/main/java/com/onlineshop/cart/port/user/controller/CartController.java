@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/cart")
@@ -63,7 +64,8 @@ public class CartController {
         return cartService.removeProductFromCart(cartProductMapDto);
     }
 
-//    public Cart incrementProductQuantity(Cart cart, Product product){
-//        return cartService.incrementProductQuantity(cart, product);
-//    }
+    @PutMapping("/increment-quantity")
+    public CartProductMap incrementProductQuantity(@RequestBody CartProductMapDto cartProductMapDto) throws NotFoundException {
+        return cartService.incrementProductQuantity(cartProductMapDto);
+    }
 }

@@ -63,7 +63,7 @@ public class CartService {
 
     private void mapCartProduct(Cart cart, Product product){
         Optional<CartProductMap> findCartProductMap =
-                Optional.ofNullable(cartProductMapRepository.findByCartAndProduct(cart, product));
+                cartProductMapRepository.findByCartAndProduct(cart, product);
 
         if(findCartProductMap.isPresent()){
             findCartProductMap.get().setQuantity(findCartProductMap.get().getQuantity()+1);
@@ -154,11 +154,33 @@ public class CartService {
         }
         Product product = productService.getProduct(cartProductMapDto.getProductId());
 
-        CartProductMap cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
+        Optional<CartProductMap> cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
 
+        if(cartProductMap.isEmpty()){
+            throw new NotFoundException("Cart Product map not found!");
+        }
 
-        cartProductMapRepository.delete(cartProductMap);
+        cartProductMapRepository.delete(cartProductMap.get());
 
         return true;
+    }
+
+    public CartProductMap incrementProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
+
+        Optional<Cart> cart = cartRepository.findById(cartProductMapDto.getCartId());
+        if(cart.isEmpty()){
+            throw new NotFoundException("Shopping cart not found!");
+        }
+        Product product = productService.getProduct(cartProductMapDto.getProductId());
+
+        Optional<CartProductMap> cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
+
+        if(cartProductMap.isEmpty()){
+            throw new NotFoundException("Cart Product map not found!");
+        }
+
+        cartProductMap.get().setQuantity(cartProductMap.get().getQuantity()+1);
+
+        return cartProductMapRepository.save(cartProductMap.get());
     }
 }
