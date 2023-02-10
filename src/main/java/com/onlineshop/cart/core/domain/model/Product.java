@@ -14,6 +14,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@ToString
 public class Product {
 
     @Id

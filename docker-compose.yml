@@ -1,52 +1,36 @@
 version: "1.0"
 
 services:
-  database:
-    platform: linux/x86_64
-    image: mysql:8.0
-    container_name: mysql_cart
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./:/app/
-    environment:
-      MYSQL_DATABASE: cart_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user
-      MYSQL_ROOT_PASSWORD: user
-    networks:
-      - internal
-
-  rabbitmq-container:
-    image: rabbitmq:3.11-management
-    hostname: rabbitmq-container
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    networks:
-      - internal
-
   app:
     container_name: cart-microservice
-    command: java -jar target/cart-0.0.1-SNAPSHOT.jar
+    command: java -jar target/warehouse-service-0.0.1-SNAPSHOT.jar
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "9002:8080"
+      - "9002:9002"
     depends_on:
-      - database
-      - rabbitmq-container
+      - database-cart
     volumes:
       - ./:/app/app
     links:
-      - database
+      - database-cart
     networks:
       - internal
+
+  database-cart:
+    image: postgres
+    container_name: database-cart
+    ports:
+      - "5433:5433"
+    volumes:
+      - ./:/app/
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql_cart:3306/cart_db?useSSL=false&allowPublicKeyRetrieval=true&useLegacyDatetimeCode=false&serverTimezone=UTC
-      - spring_rabbitmq_host=rabbitmq-container
-      - spring_rabbitmq_port=5672
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=cart_db
+    networks:
+      - internal
 
 networks:
   internal:

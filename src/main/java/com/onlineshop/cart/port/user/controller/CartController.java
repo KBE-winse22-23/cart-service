@@ -1,7 +1,10 @@
 package com.onlineshop.cart.port.user.controller;
 
 
+import com.onlineshop.cart.core.domain.dto.CartProductMapDto;
+import com.onlineshop.cart.core.domain.dto.ProductDto;
 import com.onlineshop.cart.core.domain.model.Cart;
+import com.onlineshop.cart.core.domain.model.CartProductMap;
 import com.onlineshop.cart.core.domain.model.Owner;
 import com.onlineshop.cart.core.domain.model.Product;
 import com.onlineshop.cart.core.domain.service.impl.CartService;
@@ -12,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/cart")
+@CrossOrigin("*")
 public class CartController {
 
     @Autowired
@@ -39,8 +43,27 @@ public class CartController {
     }
 
 
-    @GetMapping("/find-by-owner")
+    @PostMapping("/find-by-owner")
     public Cart findCartByOwner(@RequestBody Owner owner){
        return cartService.findByOwner(owner);
     }
+
+    @GetMapping("/{cartId}")
+    public List<ProductDto> getProductsFromCart(@PathVariable("cartId") Long cartId) {
+        return cartService.getProductsFromCart(cartId);
+    }
+
+    @GetMapping("/count-products/{cartId}")
+    public int countProductsInCart(@PathVariable("cartId") Long cartId){
+        return cartService.countProductsInCart(cartId);
+    }
+
+    @DeleteMapping("/remove-product")
+    public boolean removeProductFromCart(@RequestBody CartProductMapDto cartProductMapDto){
+        return cartService.removeProductFromCart(cartProductMapDto);
+    }
+
+//    public Cart incrementProductQuantity(Cart cart, Product product){
+//        return cartService.incrementProductQuantity(cart, product);
+//    }
 }
