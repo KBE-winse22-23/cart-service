@@ -3,7 +3,7 @@ version: "1.0"
 services:
   app:
     container_name: cart-microservice
-    command: java -jar target/warehouse-service-0.0.1-SNAPSHOT.jar
+    command: java -jar target/cart-0.0.1-SNAPSHOT.jar
     build:
       context: .
       dockerfile: Dockerfile
@@ -21,10 +21,13 @@ services:
   database-cart:
     image: postgres
     container_name: database-cart
+    expose:
+      - "5433"
     ports:
       - "5433:5433"
     volumes:
       - ./:/app/
+    command: -p 5433
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
