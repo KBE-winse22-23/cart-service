@@ -1,0 +1,33 @@
+server:
+  port: 9002
+
+spring:
+  application:
+    name: CART-SERVICE
+
+  jpa:
+    database: POSTGRESQL
+    hibernate.ddl-auto: update
+    show-sql: true
+
+  datasource:
+    platform: postgres
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://database-cart:5433/cart_db
+    username: postgres
+    password: postgres
+
+  rabbitmq:
+    port: 5672
+    host: 172.23.0.2
+    username: guest
+    password: guest
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      default-zone: http://eureka-server:8761/eureka/
+  instance:
+    hostname: eureka-server

@@ -17,6 +17,10 @@ services:
       - database-cart
     networks:
       - internal
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - spring_rabbitmq_host=rabbitmq-container
+      - spring_rabbitmq_port=5672
 
   database-cart:
     image: postgres

@@ -148,39 +148,27 @@ public class CartService {
     }
 
     public boolean removeProductFromCart(CartProductMapDto cartProductMapDto) throws NotFoundException {
-        Optional<Cart> cart = cartRepository.findById(cartProductMapDto.getCartId());
-        if(cart.isEmpty()){
-            throw new NotFoundException("Shopping cart not found!");
-        }
-        Product product = productService.getProduct(cartProductMapDto.getProductId());
-
-        Optional<CartProductMap> cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
-
-        if(cartProductMap.isEmpty()){
-            throw new NotFoundException("Cart Product map not found!");
-        }
-
-        cartProductMapRepository.delete(cartProductMap.get());
-
+        CartProductMap cartProductMap = getCartProductMap(cartProductMapDto);
+        cartProductMapRepository.delete(cartProductMap);
         return true;
     }
 
-    public CartProductMap incrementProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
-
+    public CartProductMap getCartProductMap(CartProductMapDto cartProductMapDto) throws NotFoundException {
         Optional<Cart> cart = cartRepository.findById(cartProductMapDto.getCartId());
         if(cart.isEmpty()){
             throw new NotFoundException("Shopping cart not found!");
         }
         Product product = productService.getProduct(cartProductMapDto.getProductId());
-
         Optional<CartProductMap> cartProductMap = cartProductMapRepository.findByCartAndProduct(cart.get(), product);
-
         if(cartProductMap.isEmpty()){
             throw new NotFoundException("Cart Product map not found!");
         }
+        return cartProductMap.get();
+    }
 
-        cartProductMap.get().setQuantity(cartProductMap.get().getQuantity()+1);
-
-        return cartProductMapRepository.save(cartProductMap.get());
+    public CartProductMap incrementProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
+        CartProductMap cartProductMap = getCartProductMap(cartProductMapDto);
+        cartProductMap.setQuantity(cartProductMap.getQuantity()+1);
+        return cartProductMapRepository.save(cartProductMap);
     }
 }
