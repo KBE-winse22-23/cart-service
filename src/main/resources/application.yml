@@ -7,19 +7,19 @@ spring:
 
   jpa:
     database: POSTGRESQL
-    hibernate.ddl-auto: update
+    hibernate.ddl-auto: create
     show-sql: true
 
   datasource:
     platform: postgres
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://database-cart:5433/cart_db
+    url: jdbc:postgresql://localhost:5433/cart_db
     username: postgres
     password: postgres
 
   rabbitmq:
     port: 5672
-    host: 172.23.0.2
+    host: localhost
     username: guest
     password: guest
 

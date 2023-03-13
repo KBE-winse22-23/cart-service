@@ -13,7 +13,7 @@ public class SendMessageToCartDto {
     private String productName;
     private double productPrice;
     private String image;
-    private Long ownerId;
     private String ownerFirstName;
     private String ownerLastName;
+    private String email;
 }

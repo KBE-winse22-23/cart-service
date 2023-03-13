@@ -18,11 +18,14 @@ public class MQConfig {
     public static final String PRODUCT_QUEUE = "product_message_queue";
     public static final String PRODUCT_UPDATE_QUEUE = "product_update_message_queue";
 
+    public static final String ORDER_QUEUE = "order_message_queue";
+
     public static final String CART_ROUTING_KEY = "cart_routing_key";
     public static final String WAREHOUSE_ROUTING_KEY = "warehouse_routing_key";
     public static final String PRODUCT_ROUTING_KEY = "product_routing_key";
     public static final String PRODUCT_UPDATE_ROUTING_KEY = "product_update_routing_key";
 
+    public static final String ORDER_ROUTING_KEY = "order_routing_key";
 
     @Bean
     public Queue queue(){
@@ -45,7 +48,10 @@ public class MQConfig {
         return new Queue(PRODUCT_UPDATE_QUEUE);
     }
 
-
+    @Bean
+    public Queue queue5(){
+        return new Queue(ORDER_QUEUE);
+    }
     @Bean
     public TopicExchange exchange(){
         return new TopicExchange(EXCHANGE);
@@ -84,6 +90,15 @@ public class MQConfig {
                 .bind(queue4)
                 .to(exchange)
                 .with(PRODUCT_UPDATE_ROUTING_KEY);
+    }
+
+
+    @Bean
+    public Binding binding5(Queue queue5, TopicExchange exchange){
+        return BindingBuilder
+                .bind(queue5)
+                .to(exchange)
+                .with(ORDER_ROUTING_KEY);
     }
 
 

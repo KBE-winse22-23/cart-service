@@ -1,7 +1,6 @@
 package com.onlineshop.cart.core.domain.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,9 +14,11 @@ import lombok.ToString;
 public class Owner {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long ownerId;
     private String firstName;
     private String lastName;
+    private String email;
 
 
 }

@@ -7,6 +7,7 @@ import com.onlineshop.cart.core.domain.dto.SendMessageToCartDto;
 import com.onlineshop.cart.core.domain.model.*;
 import com.onlineshop.cart.core.domain.service.interfaces.CartProductMapRepository;
 import com.onlineshop.cart.core.domain.service.interfaces.CartRepository;
+import com.onlineshop.cart.core.domain.service.interfaces.OwnerRepository;
 import com.onlineshop.cart.port.user.exception.EmptyFieldException;
 import com.onlineshop.cart.port.user.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,16 +30,18 @@ public class CartService {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private OwnerRepository ownerRepository;
 
-    public List<Cart> viewAllCarts() {
+    public List<Cart> getCarts() {
         return cartRepository.findAll();
     }
 
-    public Cart createCart(Owner owner) throws EmptyFieldException {
+    public Cart createCartForUser(Owner owner) throws EmptyFieldException {
         if(owner==null){
             throw new EmptyFieldException("Owner is empty. Can't create a shopping cart");
         }
-        if(owner.getOwnerId()==null || owner.getOwnerId()<=0){
+        if(owner.getEmail()==null || owner.getEmail().length()<=0){
             throw new EmptyFieldException("Owner id is empty. Can't create a shopping cart");
         }else if(owner.getFirstName().equals("")){
             throw new EmptyFieldException("Owner first name is empty. Can't create a shopping cart");
@@ -46,6 +49,11 @@ public class CartService {
             throw new EmptyFieldException("Owner last name is empty. Can't create a shopping cart");
         }
 
+
+        Optional<Owner> checkIfCartAlreadyExists = ownerRepository.findByEmail(owner.getEmail());
+        if(checkIfCartAlreadyExists.isPresent()){
+            throw new IllegalArgumentException("Cart for the given Owner already exists!");
+        }
         Cart cart = new Cart();
         cart.setOwner(owner);
         cartRepository.save(cart);
@@ -54,7 +62,7 @@ public class CartService {
 
 
 
-    public Product addProductToCart(Product product, Long cartId) throws NotFoundException {
+    public Product addProductToAnExistingCart(Product product, Long cartId) throws NotFoundException {
         Cart cart = findCart(cartId);
         Product productDB = productService.saveProduct(product);
         mapCartProduct(cart, productDB);
@@ -93,12 +101,13 @@ public class CartService {
     }
 
 
-    public String addProductToCart(SendMessageToCartDto productAndUserInfo) throws NotFoundException {
+    public String createCartAndAddProductConsumer(SendMessageToCartDto productAndUserInfo) throws NotFoundException, EmptyFieldException {
 
         Owner owner =
-                new Owner(productAndUserInfo.getOwnerId(),
+                new Owner(null,
                         productAndUserInfo.getOwnerFirstName(),
-                        productAndUserInfo.getOwnerLastName());
+                        productAndUserInfo.getOwnerLastName(),
+                        productAndUserInfo.getEmail());
 
         Product product = new Product();
         product.setProductId(productAndUserInfo.getProductId());
@@ -107,20 +116,24 @@ public class CartService {
         product.setImage(productAndUserInfo.getImage());
 
 
-        Cart cartDB = cartRepository.findByOwner(owner);
+        Optional<Cart> cartDB = cartRepository.findByOwnerEmail(owner.getEmail());
+        if(cartDB.isEmpty()){
+            Cart newCart = createCartForUser(owner);
+            addProductToAnExistingCart(product, newCart.getCartId());
+        }else{
+            addProductToAnExistingCart(product, cartDB.get().getCartId());
+        }
 
-        addProductToCart(product, cartDB.getCartId());
 
         return "Product added to cart!";
     }
-    public List<Cart> findAll() {
-        return cartRepository.findAll();
-    }
 
-    public Cart findByOwner(Owner owner){
-        Cart cart = cartRepository.findByOwner(owner);
-
-         return cartRepository.findByOwner(owner);
+    public Cart findByOwner(Owner owner) throws NotFoundException {
+        Optional<Cart> cart = cartRepository.findByOwner(owner);
+        if(cart.isEmpty()){
+            throw new NotFoundException("Cart with the given owner was not found!");
+        }
+        return cart.get();
     }
 
     public List<ProductDto> getProductsFromCart(Long cartId) throws com.onlineshop.cart.port.user.exception.NotFoundException {
@@ -166,9 +179,45 @@ public class CartService {
         return cartProductMap.get();
     }
 
-    public CartProductMap incrementProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
+    public CartProductMap increaseProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
         CartProductMap cartProductMap = getCartProductMap(cartProductMapDto);
         cartProductMap.setQuantity(cartProductMap.getQuantity()+1);
         return cartProductMapRepository.save(cartProductMap);
+    }
+
+    public double cartSubtotal(Long cartId) throws NotFoundException {
+        final double[] subtotal = {0};
+        List<ProductDto> products = getProductsFromCart(cartId);
+
+        products.forEach(product -> subtotal[0] = subtotal[0] + product.getProductPrice()*product.getProductQuantity());
+
+        return subtotal[0];
+    }
+
+    public Cart findByOwnerEmail(String email) throws NotFoundException {
+        Optional<Cart> cart = cartRepository.findByOwnerEmail(email);
+
+        if(cart.isEmpty()){
+            throw new NotFoundException("Cart with given Email " + email +" not found!");
+        }
+        return cart.get();
+    }
+
+    public CartProductMap decreaseProductQuantity(CartProductMapDto cartProductMapDto) throws NotFoundException {
+        CartProductMap cartProductMap = getCartProductMap(cartProductMapDto);
+        if(cartProductMap.getQuantity()>1){
+            cartProductMap.setQuantity(cartProductMap.getQuantity()-1);
+            return cartProductMapRepository.save(cartProductMap);
+        }
+        throw new IllegalArgumentException("Have reached the minimum quantity 1. Can't decrease quantity anymore!");
+
+    }
+
+
+    public boolean removeProducts(Long cartId) throws NotFoundException {
+        Cart cart = findCart(cartId);
+        List<CartProductMap> cartProductMap = cartProductMapRepository.findByCart(cart);
+        cartProductMap.forEach(item -> cartProductMapRepository.delete(item));
+        return true;
     }
 }

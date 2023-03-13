@@ -3,6 +3,7 @@ package com.onlineshop.cart.port.user.consumer;
 import com.onlineshop.cart.core.domain.dto.SendMessageToCartDto;
 import com.onlineshop.cart.core.domain.service.impl.CartService;
 import com.onlineshop.cart.port.config.MQConfig;
+import com.onlineshop.cart.port.user.exception.EmptyFieldException;
 import com.onlineshop.cart.port.user.exception.NotFoundException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,10 @@ public class CartConsumer {
     private CartService cartService;
 
     @RabbitListener(queues = MQConfig.CART_QUEUE)
-    public void addProductToCart(SendMessageToCartDto productAndUserInfo) throws NotFoundException {
+    public void addProductToCart(SendMessageToCartDto productAndUserInfo) throws NotFoundException, EmptyFieldException {
+        System.out.println("------------------------------------------------------------------");
         System.out.println(productAndUserInfo);
 
-        cartService.addProductToCart(productAndUserInfo);
+        cartService.createCartAndAddProductConsumer(productAndUserInfo);
     }
 }
